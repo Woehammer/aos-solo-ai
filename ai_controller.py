@@ -24,8 +24,9 @@ killaboss_attack_profile = [
 ]
 
 class AIController:
-    def __init__(self):
+    def __init__(self, game_state):
         self.name = "Swampskulka Gang"
+        self.state = gme_state
 
     def hero_phase(self):
         print("AI Hero Phase: Killaboss uses 'All Part of Da Plan' on Gutrippaz (+3 Control).")
