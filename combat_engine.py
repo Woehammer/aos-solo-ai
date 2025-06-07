@@ -1,15 +1,18 @@
 import random
 
-# Universal Dice Roller
 def roll_dice(number, success_threshold):
     rolls = [random.randint(1, 6) for _ in range(number)]
     successes = sum(1 for roll in rolls if roll >= success_threshold)
     return successes, rolls
 
-# Resolve single weapon attack profile
-def resolve_attack(weapon_profile):
+def resolve_attack(weapon_profile, stationary_bonus=False):
     attacks = weapon_profile["attacks"]
-    hit_threshold = weapon_profile["hit"]
+
+    if stationary_bonus and weapon_profile.get("stationary_bonus", False):
+        hit_threshold = weapon_profile["hit"] - 1
+    else:
+        hit_threshold = weapon_profile["hit"]
+
     wound_threshold = weapon_profile["wound"]
     rend = weapon_profile["rend"]
     damage = weapon_profile["damage"]
@@ -20,7 +23,6 @@ def resolve_attack(weapon_profile):
     crit_hits = sum(1 for roll in hit_rolls if roll == 6)
     normal_hits = hits - crit_hits
     crit_mortal_wounds = crit_hits * mortal_on_crit if crit_rule == "mortal_on_crit" else 0
-
     wounds, wound_rolls = roll_dice(normal_hits, wound_threshold)
 
     return {
@@ -29,24 +31,21 @@ def resolve_attack(weapon_profile):
         "hit_rolls": hit_rolls,
         "normal_hits": normal_hits,
         "crit_hits": crit_hits,
-        "wound_rolls": wound_rolls,
         "wounds": wounds,
         "rend": rend,
         "damage": damage,
         "crit_mortal_wounds": crit_mortal_wounds
     }
 
-# Resolve full unit attack sequence
-def resolve_unit_attacks(unit_attack_profiles):
+def resolve_unit_attacks(unit_attack_profiles, stationary_bonus=False):
     results = []
     total_mortal_wounds = 0
     for weapon in unit_attack_profiles:
-        outcome = resolve_attack(weapon)
+        outcome = resolve_attack(weapon, stationary_bonus)
         total_mortal_wounds += outcome["crit_mortal_wounds"]
         results.append(outcome)
     return {"weapon_results": results, "total_mortal_wounds": total_mortal_wounds}
 
-# Narrative output formatting
 def format_attack_output(result, unit_name):
     output = [f"{unit_name} attacks:"]
     for weapon in result["weapon_results"]:
