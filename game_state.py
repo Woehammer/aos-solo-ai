@@ -7,6 +7,7 @@ class GameState:
         self.ai_objectives = 1
         self.player_objectives = 1
         self.contested_objective = "neutral"
+        self.kruleboyz_waaagh_used = False
 
     def update_scores(self):
         if self.contested_objective == "ai":
@@ -24,9 +25,3 @@ class GameState:
 
     def advance_round(self):
         self.round += 1
-
-    def print_score(self):
-        print(f"--- End of Round {self.round} ---")
-        print(f"AI Victory Points: {self.ai_vp}")
-        print(f"Player Victory Points: {self.player_vp}")
-        print("--------------------------")
