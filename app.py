@@ -1,66 +1,65 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 from game_state import GameState
 from ai_controller import AIController
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Replace with random string for production use
 
-# In-memory game state per session
-games = {}
+# In-memory game state
+game_state = GameState()
+ai_controller = AIController(game_state)
+
+battle_log = []
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    global game_state, ai_controller, battle_log
+
     if request.method == "POST":
-        game_id = "solo_game"
-        games[game_id] = {
-            "state": GameState(),
-            "ai": None
-        }
-        games[game_id]["ai"] = AIController(games[game_id]["state"])
+        game_state = GameState()
+        ai_controller = AIController(game_state)
+        battle_log = []
         return redirect(url_for("game"))
     return render_template("index.html")
 
 @app.route("/game", methods=["GET", "POST"])
 def game():
-    game_id = "solo_game"
-    game_data = games[game_id]
-    state = game_data["state"]
-    ai = game_data["ai"]
+    global game_state, ai_controller, battle_log
 
-    output = []
+    # Full AI turn
+    log = []
+    log += ai_controller.hero_phase()
+    log += ai_controller.movement_phase()
+    log += ai_controller.shooting_phase()
+    log += ai_controller.charge_phase()
+    log += ai_controller.combat_phase()
 
-    # Run full AI turn for the round
-    ai.hero_phase()
-    ai.movement_phase()
-    ai.shooting_phase()
-    ai.charge_phase()
-    ai.combat_phase()
-
-    output.append(f"=== Round {state.round} ===")
-    output.append("--- AI Turn Complete ---")
+    battle_log.append({
+        'round': game_state.round,
+        'phase_log': log
+    })
 
     if request.method == "POST":
         controller = request.form["controller"]
         if controller in ["ai", "player", "neutral"]:
-            state.contested_objective = controller
+            game_state.contested_objective = controller
         else:
-            state.contested_objective = "neutral"
+            game_state.contested_objective = "neutral"
 
-        state.update_scores()
-        state.advance_round()
+        game_state.update_scores()
+        game_state.advance_round()
 
-        if state.round > state.max_rounds:
+        if game_state.round > game_state.max_rounds:
             return redirect(url_for("end"))
 
         return redirect(url_for("game"))
 
-    return render_template("game.html", output=output, state=state)
+    return render_template("game.html", game_state=game_state, battle_log=battle_log)
 
 @app.route("/end")
 def end():
-    game_id = "solo_game"
-    state = games[game_id]["state"]
-    return render_template("end.html", state=state)
+    return render_template("end.html", game_state=game_state)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
