@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Round {{ state.round }}</title>
+  </head>
+  <body>
+    <h1>Round {{ state.round }}</h1>
+    <ul>
+      {% for line in output %}
+      <li>{{ line }}</li>
+      {% endfor %}
+    </ul>
+
+    <form method="post">
+      <label>Who controls contested objective?</label>
+      <select name="controller">
+        <option value="ai">AI</option>
+        <option value="player">Player</option>
+        <option value="neutral">Neutral</option>
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+
+    <h3>Score</h3>
+    <p>AI VP: {{ state.ai_vp }} | Player VP: {{ state.player_vp }}</p>
+  </body>
+</html>
