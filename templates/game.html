@@ -1,15 +1,17 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <title>Round {{ state.round }}</title>
-  </head>
+  <head><title>Game - Round {{ game_state.round }}</title></head>
   <body>
-    <h1>Round {{ state.round }}</h1>
-    <ul>
-      {% for line in output %}
-      <li>{{ line }}</li>
+    <h1>Round {{ game_state.round }}</h1>
+
+    {% for round in battle_log %}
+      <h3>Turn {{ round.round }}</h3>
+      <ul>
+      {% for line in round.phase_log %}
+        <li>{{ line }}</li>
       {% endfor %}
-    </ul>
+      </ul>
+    {% endfor %}
 
     <form method="post">
       <label>Who controls contested objective?</label>
@@ -22,6 +24,6 @@
     </form>
 
     <h3>Score</h3>
-    <p>AI VP: {{ state.ai_vp }} | Player VP: {{ state.player_vp }}</p>
+    <p>AI VP: {{ game_state.ai_vp }} | Player VP: {{ game_state.player_vp }}</p>
   </body>
 </html>
