@@ -1,48 +1,77 @@
 from combat_engine import resolve_unit_attacks, format_attack_output
 
-# Killaboss attack profile (expandable to other units)
 killaboss_attack_profile = [
-    {
-        "weapon": "Jagged Boss-Stikka",
-        "attacks": 4,
-        "hit": 3,
-        "wound": 3,
-        "rend": 1,
-        "damage": 1,
-        "crit_rule": "mortal_on_crit",
-        "mortal_on_crit": 1
-    },
-    {
-        "weapon": "Gnashtoof’s Fangs",
-        "attacks": 5,
-        "hit": 4,
-        "wound": 3,
-        "rend": 1,
-        "damage": 2,
-        "crit_rule": "none"
-    }
+    {"weapon": "Jagged Boss-Stikka", "attacks": 4, "hit": 3, "wound": 3, "rend": 1, "damage": 1, "crit_rule": "mortal_on_crit", "mortal_on_crit": 1},
+    {"weapon": "Gnashtoof’s Fangs", "attacks": 5, "hit": 4, "wound": 3, "rend": 1, "damage": 2, "crit_rule": "none"}
+]
+
+murknob_attack_profile = [
+    {"weapon": "Murknob Cleaver", "attacks": 4, "hit": 4, "wound": 3, "rend": 1, "damage": 2, "crit_rule": "mortal_on_crit", "mortal_on_crit": 1}
+]
+
+gutrippaz_attack_profile = [
+    {"weapon": "Wicked Hacka", "attacks": 2, "hit": 4, "wound": 3, "rend": 0, "damage": 1, "crit_rule": "mortal_on_crit", "mortal_on_crit": 1}
+]
+
+boltboyz_attack_profile = [
+    {"weapon": "Man-Skewer Crossbows", "attacks": 2, "hit": 4, "wound": 3, "rend": 1, "damage": 2, "crit_rule": "none", "stationary_bonus": True}
+]
+
+killbow_attack_profile = [
+    {"weapon": "Beast-Skewer Bolts", "attacks": 2, "hit": 4, "wound": 2, "rend": 2, "damage": 6, "crit_rule": "none"}
 ]
 
 class AIController:
     def __init__(self, game_state):
-        self.name = "Swampskulka Gang"
         self.state = game_state
 
     def hero_phase(self):
-        print("AI Hero Phase: Killaboss uses 'All Part of Da Plan' on Gutrippaz (+3 Control).")
+        return ["Hero Phase: Killaboss uses All Part of Da Plan on Gutrippaz (+3 Control)."]
 
     def movement_phase(self):
-        print("AI Movement Phase: Units reposition toward objectives.")
+        return [
+            "Movement Phase:",
+            "- Gutrippaz advance to objectives.",
+            "- Boltboyz hold position (Pick 'Em Off ready).",
+            "- Killbow holds LOS on Monsters.",
+            "- Killaboss moves to engage.",
+            "- Murknob supports the Killaboss."
+        ]
 
     def shooting_phase(self):
-        print("AI Shooting Phase: (No targets in test mode)")
+        log = ["Shooting Phase:"]
+
+        result = resolve_unit_attacks(boltboyz_attack_profile, stationary_bonus=True)
+        log += format_attack_output(result, "Boltboyz")
+
+        result = resolve_unit_attacks(killbow_attack_profile)
+        log += format_attack_output(result, "Killbow")
+
+        return log
 
     def charge_phase(self):
-        print("AI Charge Phase: Killaboss charges.")
+        return [
+            "Charge Phase:",
+            "- Killaboss charges.",
+            "- Murknob follows.",
+            "- Gutrippaz move in to fight."
+        ]
 
     def combat_phase(self):
-        print("AI Combat Phase:")
+        log = ["Combat Phase:"]
+
+        if not self.state.kruleboyz_waaagh_used:
+            log.append("Kruleboyz Waaagh! activated. Killaboss & Gutrippaz strike first.")
+            self.state.kruleboyz_waaagh_used = True
+
         result = resolve_unit_attacks(killaboss_attack_profile)
-        report = format_attack_output(result, "Killaboss on Great Gnashtoof")
-        for line in report:
-            print(line)
+        log += format_attack_output(result, "Killaboss")
+
+        log.append("Murknob triggers Breath of the Mire-Drakes (1 mortal wound inflicted).")
+        result = resolve_unit_attacks(murknob_attack_profile)
+        log += format_attack_output(result, "Murknob")
+
+        result = resolve_unit_attacks(gutrippaz_attack_profile)
+        log += format_attack_output(result, "Gutrippaz")
+
+        return log
