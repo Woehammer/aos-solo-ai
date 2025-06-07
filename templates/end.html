@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Game Over</title>
+  </head>
+  <body>
+    <h1>Game Over</h1>
+    <p>Final Score:</p>
+    <p>AI VP: {{ state.ai_vp }} | Player VP: {{ state.player_vp }}</p>
+
+    <h2>
+      {% if state.ai_vp > state.player_vp %}
+        AI Wins!
+      {% elif state.player_vp > state.ai_vp %}
+        Player Wins!
+      {% else %}
+        It's a Draw!
+      {% endif %}
+    </h2>
+
+    <a href="/">Return to Start</a>
+  </body>
+</html>
