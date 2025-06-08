@@ -1,44 +1,62 @@
 from flask import Flask, render_template, request, redirect, url_for
 from game_state import GameState
 from ai_controller import AIController
+from battlefield_state import BattlefieldState
 
 app = Flask(__name__)
 
-# In-memory game state
 game_state = GameState()
-ai_controller = AIController(game_state)
+battlefield_state = BattlefieldState()
+ai_controller = AIController(game_state, battlefield_state)
 
 battle_log = []
-
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global game_state, ai_controller, battle_log
+    global game_state, battlefield_state, ai_controller, battle_log
 
     if request.method == "POST":
         game_state = GameState()
-        ai_controller = AIController(game_state)
-        battle_log = []
+        battlefield_state = BattlefieldState()
+        ai_controller = AIController(game_state, battlefield_state)
+        battle_log.clear()
         return redirect(url_for("game"))
-    return render_template("index.html")
 
+    return render_template("index.html")
 @app.route("/game", methods=["GET", "POST"])
 def game():
-    global game_state, ai_controller, battle_log
-
-    # Full AI turn
-    log = []
-    log += ai_controller.hero_phase()
-    log += ai_controller.movement_phase()
-    log += ai_controller.shooting_phase()
-    log += ai_controller.charge_phase()
-    log += ai_controller.combat_phase()
-
-    battle_log.append({
-        'round': game_state.round,
-        'phase_log': log
-    })
+    global game_state, battlefield_state, ai_controller, battle_log
 
     if request.method == "POST":
+        # Collect battlefield inputs
+        battlefield_state.killaboss_enemy_distance = int(request.form["killaboss_enemy_distance"])
+        battlefield_state.killaboss_objective_distance = int(request.form["killaboss_objective_distance"])
+        battlefield_state.killaboss_charge = request.form["killaboss_charge"]
+
+        # Same for other units (Murknob, Gutrippaz, Boltboyz, Killbow)
+        battlefield_state.murknob_enemy_distance = int(request.form["murknob_enemy_distance"])
+        battlefield_state.murknob_objective_distance = int(request.form["murknob_objective_distance"])
+        battlefield_state.murknob_charge = request.form["murknob_charge"]
+
+        battlefield_state.gutrippaz_enemy_distance = int(request.form["gutrippaz_enemy_distance"])
+        battlefield_state.gutrippaz_objective_distance = int(request.form["gutrippaz_objective_distance"])
+        battlefield_state.gutrippaz_charge = request.form["gutrippaz_charge"]
+
+        battlefield_state.boltboyz_enemy_distance = int(request.form["boltboyz_enemy_distance"])
+        battlefield_state.boltboyz_objective_distance = int(request.form["boltboyz_objective_distance"])
+        battlefield_state.boltboyz_charge = request.form["boltboyz_charge"]
+
+        battlefield_state.killbow_enemy_distance = int(request.form["killbow_enemy_distance"])
+        battlefield_state.killbow_objective_distance = int(request.form["killbow_objective_distance"])
+        battlefield_state.killbow_charge = request.form["killbow_charge"]
+
+        # Run AI Turn
+        log = ai_controller.run_turn()
+        battle_log.append({
+            'round': game_state.round,
+            'phase_log': log
+        })
+
+        # After turn, collect contested objective control
         controller = request.form["controller"]
         if controller in ["ai", "player", "neutral"]:
             game_state.contested_objective = controller
